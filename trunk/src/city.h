@@ -18,7 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 //
-// CityHash Version 1, by Geoff Pike and Jyrki Alakuijala
+// CityHash, by Geoff Pike and Jyrki Alakuijala
 //
 // This file provides a few functions for hashing strings. On x86-64
 // hardware in 2011, CityHash64() is faster than other high-quality
