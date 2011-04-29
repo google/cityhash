@@ -136,7 +136,7 @@ SMHasher isn't perfect, but it seems to find any significant flaw.
 SMHasher is available at http://code.google.com/p/smhasher/
 
 SMHasher is designed to pass a 32-bit seed to the hash functions it tests.
-None of functions is designed to work that way, so we adapt as follows:
+No CityHash function is designed to work that way, so we adapt as follows:
 For our functions that accept a seed, we use the given seed directly (padded
 with zeroes); for our functions that don't accept a seed, we hash the
 concatenation of the given seed and the input string.
