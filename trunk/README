@@ -108,15 +108,15 @@ Usage
 
 The above installation instructions will produce a single library.  It will
 contain CityHash64() and CityHash128() and their variants, and possibly
-CityHashCrc128() and CityHashCrc128WithSeed().  The functions with Crc in
-the name are declared in citycrc.h; the rest are declared in city.h.
+CityHashCrc128(), CityHashCrc128WithSeed(), and CityHashCrc256().  The
+functions with Crc in the name are declared in citycrc.h; the rest are
+declared in city.h.
 
 
 Limitations
 ===========
 
-1) The current version of CityHash is intended for little-endian 64-bit
-CPUs.
+1) The current version of CityHash is intended for little-endian 64-bit CPUs.
 
 Functions that do use the CRC32 instruction should also work, slowly, in
 little-endian 32-bit code.  CityHash should work on big-endian CPUs as well;
@@ -146,8 +146,8 @@ The CityHash functions have the following flaws according to SMHasher:
 (1) CityHash64: some cases of poor avalanching, which we suspect don't matter in
 practice, with some inputs <= 16 bytes.
 
-(2) CityHash64WithSeed: one or two minor issues with inputs of at most two
-non-zeroes and length <= 24 bytes.
+(2) CityHash64WithSeed: one or two minor issues with inputs containing at most
+two non-zero bytes and length <= 24 bytes.
 
 (3) CityHash64WithSeeds: did not test
 
