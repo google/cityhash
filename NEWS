@@ -1,5 +1,11 @@
-CityHash vXXX, DATE
+CityHash v1.0.2, May 8, 2011
 
+  * Correct a problem in CityHashCrc256(); for inputs under 240 bytes the
+    scheme of padding to 240 bytes was causing the empty string and an input
+    of exactly 240 NULs to have the same hash code.  That is now fixed.
+    Most strings less than 240 bytes long will have a different hash than
+    they did in v1.0.1.
+  * Other hash functions are unchanged.
   * Minor corrections and improvements to README.
 
 CityHash v1.0.1, April 28, 2011
