@@ -118,7 +118,7 @@ Limitations
 
 1) The current version of CityHash is intended for little-endian 64-bit CPUs.
 
-Functions that do use the CRC32 instruction should also work, slowly, in
+Functions that don't use the CRC32 instruction should also work, slowly, in
 little-endian 32-bit code.  CityHash should work on big-endian CPUs as well;
 if you try it, please let us know.
 
