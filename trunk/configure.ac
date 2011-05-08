@@ -1,11 +1,11 @@
 m4_define([cityhash_major], [1])
 m4_define([cityhash_minor], [0])
-m4_define([cityhash_patchlevel], [1])
+m4_define([cityhash_patchlevel], [2])
 
 # Libtool shared library interface versions (current:revision:age)
 # Update this value for every release!  (A:B:C will map to foo.so.(A-C).C.B)
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-m4_define([cityhash_ltversion], [0:0:0])
+m4_define([cityhash_ltversion], [1:0:0])
 
 AC_PREREQ([2.65])
 AC_INIT([CityHash], [cityhash_major.cityhash_minor.cityhash_patchlevel], [cityhash-discuss@googlegroups.com])

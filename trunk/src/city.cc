@@ -433,7 +433,7 @@ static void CityHashCrc256Short(const char *s, size_t len, uint64 *result) {
   char buf[240];
   memcpy(buf, s, len);
   memset(buf + len, 0, 240 - len);
-  CityHashCrc256Long(buf, 240, len, result);
+  CityHashCrc256Long(buf, 240, ~static_cast<uint32>(len), result);
 }
 
 void CityHashCrc256(const char *s, size_t len, uint64 *result) {
