@@ -38,19 +38,17 @@ designed as a hash function and shouldn't be used as one.  CityHashCrc128()
 is not a CRC, but it uses the CRC32 machinery.
 
 On a single core of a 2.67GHz Intel Xeon X5550, CityHashCrc256 peaks at
-about 6.03 bytes/cycle.  The other CityHashCrc functions are wrappers around
+about 6.09 bytes/cycle.  The other CityHashCrc functions are wrappers around
 CityHashCrc256 and should have similar performance on long strings.
-CityHash128 peaks at about 4.58 bytes/cycle.  The fastest Murmur variant on
+CityHash128 peaks at about 4.31 bytes/cycle.  The fastest Murmur variant on
 that hardware, Murmur3F, peaks at about 2.4 bytes/cycle.  We expect the peak
 speed of CityHash128 to dominate CityHash64, which is aimed more toward short
 strings or use in hash tables.
 
-For long strings, a couple new functions by Bob Jenkins, Spooky and Akron,
-appear to be right around the same speed as CityHash128, and they also seem
-targeted to the same level of quality as CityHash and Murmur.  However, it
-isn't clear whether these functions have been "released" or are still works
-in progress.  We'll try to find out, and update this.
-
+For long strings, a new function by Bob Jenkins, SpookyHash, is just slightly
+slower than CityHash128 on Intel x86-64 CPUs, but noticeably faster on AMD
+x86-64 CPUs.  For hashing long strings on CPUs without the CRC instruction,
+SpookyHash may be just as good or better than any of the CityHash variants.
 
 Performance on short strings
 ============================
@@ -132,7 +130,7 @@ Hash Quality
 ============
 
 We like to test hash functions with SMHasher, among other things.
-SMHasher isn't perfect, but it seems to find any significant flaw.
+SMHasher isn't perfect, but it seems to find almost any significant flaw.
 SMHasher is available at http://code.google.com/p/smhasher/
 
 SMHasher is designed to pass a 32-bit seed to the hash functions it tests.

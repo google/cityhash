@@ -1,6 +1,12 @@
-CityHash vXXX, DATE
+CityHash v1.0.3, October 6, 2011
 
-  * Minor corrections to README.
+  * Change all the functions to improve their hash quality.  Most of the
+    changes were minor.  Special thanks to Bob Jenkins for reporting some
+    issues that he'd found.  The speed of the functions after these changes is
+    roughly unchanged, except that CityHash128() and CityHash128WithSeed() are
+    slower.
+  * To improve portability, replace the one use of ssize_t with signed long.
+  * Improve README.
 
 CityHash v1.0.2, May 8, 2011
 
