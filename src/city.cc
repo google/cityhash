@@ -211,25 +211,23 @@ uint64 CityHash64(const char *s, size_t len) {
 
   // For strings over 64 bytes we hash the end first, and then as we
   // loop we keep 56 bytes of state: v, w, x, y, and z.
-  uint64 x = Fetch64(s);
-  uint64 y = Fetch64(s + len - 16) ^ k1;
-  uint64 z = Fetch64(s + len - 56) ^ k0;
-  pair<uint64, uint64> v = WeakHashLen32WithSeeds(s + len - 64, len, y);
-  pair<uint64, uint64> w = WeakHashLen32WithSeeds(s + len - 32, len * k1, k0);
-  z += ShiftMix(v.second) * k1;
-  x = Rotate(z + x, 39) * k1;
-  y = Rotate(y, 33) * k1;
+  uint64 x = Fetch64(s + len - 40);
+  uint64 y = Fetch64(s + len - 16) + Fetch64(s + len - 56);
+  uint64 z = HashLen16(Fetch64(s + len - 48) + len, Fetch64(s + len - 24));
+  pair<uint64, uint64> v = WeakHashLen32WithSeeds(s + len - 64, len, z);
+  pair<uint64, uint64> w = WeakHashLen32WithSeeds(s + len - 32, y + k1, x);
+  x = x * k1 + Fetch64(s);
 
   // Decrease len to the nearest multiple of 64, and operate on 64-byte chunks.
   len = (len - 1) & ~static_cast<size_t>(63);
   do {
-    x = Rotate(x + y + v.first + Fetch64(s + 16), 37) * k1;
+    x = Rotate(x + y + v.first + Fetch64(s + 8), 37) * k1;
     y = Rotate(y + v.second + Fetch64(s + 48), 42) * k1;
     x ^= w.second;
-    y ^= v.first;
-    z = Rotate(z ^ w.first, 33);
+    y += v.first + Fetch64(s + 40);
+    z = Rotate(z + w.first, 33) * k1;
     v = WeakHashLen32WithSeeds(s, v.second * k1, x + w.first);
-    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y);
+    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y + Fetch64(s + 16));
     std::swap(z, x);
     s += 64;
     len -= 64;
@@ -248,13 +246,13 @@ uint64 CityHash64WithSeeds(const char *s, size_t len,
 }
 
 // A subroutine for CityHash128().  Returns a decent 128-bit hash for strings
-// of any length representable in ssize_t.  Based on City and Murmur.
+// of any length representable in signed long.  Based on City and Murmur.
 static uint128 CityMurmur(const char *s, size_t len, uint128 seed) {
   uint64 a = Uint128Low64(seed);
   uint64 b = Uint128High64(seed);
   uint64 c = 0;
   uint64 d = 0;
-  ssize_t l = len - 16;
+  signed long l = len - 16;
   if (l <= 0) {  // len <= 16
     a = ShiftMix(a * k1) * k1;
     c = b * k1 + HashLen0to16(s, len);
@@ -297,42 +295,43 @@ uint128 CityHash128WithSeed(const char *s, size_t len, uint128 seed) {
 
   // This is the same inner loop as CityHash64(), manually unrolled.
   do {
-    x = Rotate(x + y + v.first + Fetch64(s + 16), 37) * k1;
+    x = Rotate(x + y + v.first + Fetch64(s + 8), 37) * k1;
     y = Rotate(y + v.second + Fetch64(s + 48), 42) * k1;
     x ^= w.second;
-    y ^= v.first;
-    z = Rotate(z ^ w.first, 33);
+    y += v.first + Fetch64(s + 40);
+    z = Rotate(z + w.first, 33) * k1;
     v = WeakHashLen32WithSeeds(s, v.second * k1, x + w.first);
-    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y);
+    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y + Fetch64(s + 16));
     std::swap(z, x);
     s += 64;
-    x = Rotate(x + y + v.first + Fetch64(s + 16), 37) * k1;
+    x = Rotate(x + y + v.first + Fetch64(s + 8), 37) * k1;
     y = Rotate(y + v.second + Fetch64(s + 48), 42) * k1;
     x ^= w.second;
-    y ^= v.first;
-    z = Rotate(z ^ w.first, 33);
+    y += v.first + Fetch64(s + 40);
+    z = Rotate(z + w.first, 33) * k1;
     v = WeakHashLen32WithSeeds(s, v.second * k1, x + w.first);
-    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y);
+    w = WeakHashLen32WithSeeds(s + 32, z + w.second, y + Fetch64(s + 16));
     std::swap(z, x);
     s += 64;
     len -= 128;
   } while (LIKELY(len >= 128));
-  y += Rotate(w.first, 37) * k0 + z;
   x += Rotate(v.first + z, 49) * k0;
+  z += Rotate(w.first, 37) * k0;
   // If 0 < len < 128, hash up to 4 chunks of 32 bytes each from the end of s.
   for (size_t tail_done = 0; tail_done < len; ) {
     tail_done += 32;
-    y = Rotate(y - x, 42) * k0 + v.second;
+    y = Rotate(x + y, 42) * k0 + v.second;
     w.first += Fetch64(s + len - tail_done + 16);
-    x = Rotate(x, 49) * k0 + w.first;
-    w.first += v.first;
-    v = WeakHashLen32WithSeeds(s + len - tail_done, v.first, v.second);
+    x = x * k0 + w.first;
+    z += w.second + Fetch64(s + len - tail_done);
+    w.second += v.first;
+    v = WeakHashLen32WithSeeds(s + len - tail_done, v.first + z, v.second);
   }
-  // At this point our 48 bytes of state should contain more than
+  // At this point our 56 bytes of state should contain more than
   // enough information for a strong 128-bit hash.  We use two
-  // different 48-byte-to-8-byte hashes to get a 16-byte final result.
+  // different 56-byte-to-8-byte hashes to get a 16-byte final result.
   x = HashLen16(x, v.first);
-  y = HashLen16(y, w.first);
+  y = HashLen16(y + z, w.first);
   return uint128(HashLen16(x + v.second, w.second) + y,
                  HashLen16(x + w.second, y + v.second));
 }
@@ -362,8 +361,8 @@ static void CityHashCrc256Long(const char *s, size_t len,
                                uint32 seed, uint64 *result) {
   uint64 a = Fetch64(s + 56) + k0;
   uint64 b = Fetch64(s + 96) + k0;
-  uint64 c = result[1] = HashLen16(b, len);
-  uint64 d = result[2] = Fetch64(s + 120) * k0 + len;
+  uint64 c = result[0] = HashLen16(b, len);
+  uint64 d = result[1] = Fetch64(s + 120) * k0 + len;
   uint64 e = Fetch64(s + 184) + seed;
   uint64 f = seed;
   uint64 g = 0;
@@ -397,33 +396,31 @@ static void CityHashCrc256Long(const char *s, size_t len,
     CHUNK(1, 1); CHUNK(k0, 0);
     CHUNK(1, 1); CHUNK(k0, 0);
   } while (--iters > 0);
+
+  while (len >= 40) {
+    CHUNK(k0, 0);
+    len -= 40;
+  }
+  if (len > 0) {
+    s = s + len - 40;
+    CHUNK(k0, 0);
+  }
   j += i << 32;
   a = HashLen16(a, j);
   h += g << 32;
-  b = b * k0 + h;
+  b += h;
   c = HashLen16(c, f) + i;
-  d = HashLen16(d, e);
-  pair<uint64, uint64> v(j + e, HashLen16(h, t));
-  h = v.second + f;
-  // If 0 < len < 240, hash chunks of 32 bytes each from the end of s.
-  for (size_t tail_done = 0; tail_done < len; ) {
-    tail_done += 32;
-    c = Rotate(c - a, 42) * k0 + v.second;
-    d += Fetch64(s + len - tail_done + 16);
-    a = Rotate(a, 49) * k0 + d;
-    d += v.first;
-    v = WeakHashLen32WithSeeds(s + len - tail_done, v.first, v.second);
-  }
-
-  // Final mix.
-  e = HashLen16(a, d) + v.first;
+  d = HashLen16(d, e + result[0]);
+  j += e;
+  i += HashLen16(h, t);
+  e = HashLen16(a, d) + j;
   f = HashLen16(b, c) + a;
-  g = HashLen16(v.first, v.second) + c;
+  g = HashLen16(j, i) + c;
   result[0] = e + f + g + h;
   a = ShiftMix((a + g) * k0) * k0 + b;
   result[1] += a + result[0];
   a = ShiftMix(a * k0) * k0 + c;
-  result[2] += a + result[1];
+  result[2] = a + result[1];
   a = ShiftMix((a + e) * k0) * k0;
   result[3] = a + result[2];
 }
