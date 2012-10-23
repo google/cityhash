@@ -10,6 +10,8 @@ input bits thoroughly but are not suitable for cryptography.  See
 
 We provide reference implementations in C++, with a friendly MIT license.
 
+CityHash32() returns a 32-bit hash.
+
 CityHash64() and similar return a 64-bit hash.
 
 CityHash128() and similar return a 128-bit hash and are tuned for
@@ -25,9 +27,12 @@ on some CPUs.  However, none of the functions we provide are CRCs.
 CityHashCrc256() is a variant of CityHashCrc128() that also depends
 on _mm_crc32_u64().  It returns a 256-bit hash.
 
+All members of the CityHash family were designed with heavy reliance
+on previous work by Austin Appleby, Bob Jenkins, and others.
+For example, CityHash32 has many similarities with Murmur3a.
 
-Performance on long strings
-===========================
+Performance on long strings: 64-bit CPUs
+========================================
  
 We are most excited by the performance of CityHash64() and its variants on
 short strings, but long strings are interesting as well.
@@ -37,21 +42,23 @@ well.  For CPUs with the CRC32 instruction, CRC is speedy, but CRC wasn't
 designed as a hash function and shouldn't be used as one.  CityHashCrc128()
 is not a CRC, but it uses the CRC32 machinery.
 
-On a single core of a 2.67GHz Intel Xeon X5550, CityHashCrc256 peaks at
-about 6.09 bytes/cycle.  The other CityHashCrc functions are wrappers around
+On a single core of a 2.67GHz Intel Xeon X5550, CityHashCrc256 peaks at about
+5 to 5.5 bytes/cycle.  The other CityHashCrc functions are wrappers around
 CityHashCrc256 and should have similar performance on long strings.
-CityHash128 peaks at about 4.31 bytes/cycle.  The fastest Murmur variant on
-that hardware, Murmur3F, peaks at about 2.4 bytes/cycle.  We expect the peak
-speed of CityHash128 to dominate CityHash64, which is aimed more toward short
-strings or use in hash tables.
+(CityHashCrc256 in v1.0.3 was even faster, but we decided it wasn't as thorough
+as it should be.)  CityHash128 peaks at about 4.3 bytes/cycle.  The fastest
+Murmur variant on that hardware, Murmur3F, peaks at about 2.4 bytes/cycle.
+We expect the peak speed of CityHash128 to dominate CityHash64, which is
+aimed more toward short strings or use in hash tables.
 
-For long strings, a new function by Bob Jenkins, SpookyHash, is just slightly
-slower than CityHash128 on Intel x86-64 CPUs, but noticeably faster on AMD
-x86-64 CPUs.  For hashing long strings on CPUs without the CRC instruction,
-SpookyHash may be just as good or better than any of the CityHash variants.
+For long strings, a new function by Bob Jenkins, SpookyHash, is just
+slightly slower than CityHash128 on Intel x86-64 CPUs, but noticeably
+faster on AMD x86-64 CPUs.  For hashing long strings on AMD CPUs
+and/or CPUs without the CRC instruction, SpookyHash may be just as
+good or better than any of the CityHash variants.
 
-Performance on short strings
-============================
+Performance on short strings: 64-bit CPUs
+=========================================
 
 For short strings, e.g., most hash table keys, CityHash64 is faster than
 CityHash128, and probably faster than all the aforementioned functions,
@@ -61,10 +68,22 @@ and over again:
 
 Hash              Results
 ------------------------------------------------------------------------------
-CityHash64        7ns for 1 byte, or 6ns for 8 bytes, or 9ns for 64 bytes
+CityHash64 v1.0.3 7ns for 1 byte, or 6ns for 8 bytes, or 9ns for 64 bytes
 Murmur2 (64-bit)  6ns for 1 byte, or 6ns for 8 bytes, or 15ns for 64 bytes
 Murmur3F          14ns for 1 byte, or 15ns for 8 bytes, or 23ns for 64 bytes
 
+We don't have CityHash64 benchmarks results for v1.1, but we expect the
+numbers to be similar.
+
+Performance: 32-bit CPUs
+========================
+
+CityHash32 is the newest variant of CityHash.  It is intended for
+32-bit hardware in general but has been mostly tested on x86.  Our benchmarks
+suggest that Murmur3 is the nearest competitor to CityHash32 on x86.
+We don't know of anything faster that has comparable quality.  The speed rankings
+in our testing: CityHash32 > Murmur3f > Murmur3a (for long strings), and
+CityHash32 > Murmur3a > Murmur3f (for short strings).
 
 Installation
 ============
@@ -105,20 +124,21 @@ Usage
 =====
 
 The above installation instructions will produce a single library.  It will
-contain CityHash64() and CityHash128() and their variants, and possibly
-CityHashCrc128(), CityHashCrc128WithSeed(), and CityHashCrc256().  The
-functions with Crc in the name are declared in citycrc.h; the rest are
-declared in city.h.
+contain CityHash32(), CityHash64(), and CityHash128(), and their variants,
+and possibly CityHashCrc128(), CityHashCrc128WithSeed(), and
+CityHashCrc256().  The functions with Crc in the name are declared in
+citycrc.h; the rest are declared in city.h.
 
 
 Limitations
 ===========
 
-1) The current version of CityHash is intended for little-endian 64-bit CPUs.
+1) CityHash32 is intended for little-endian 32-bit code, and everything else in
+the current version of CityHash is intended for little-endian 64-bit CPUs.
 
-Functions that don't use the CRC32 instruction should also work, slowly, in
-little-endian 32-bit code.  CityHash should work on big-endian CPUs as well;
-if you try it, please let us know.
+All functions that don't use the CRC32 instruction should work in
+little-endian 32-bit or 64-bit code.  CityHash should work on big-endian CPUs
+as well, but we haven't tested that very thoroughly yet.
 
 2) CityHash is fairly complex.  As a result of its complexity, it may not
 perform as expected on some compilers.  For example, preliminary reports
@@ -141,11 +161,9 @@ concatenation of the given seed and the input string.
 
 The CityHash functions have the following flaws according to SMHasher:
 
-(1) CityHash64: some cases of poor avalanching, which we suspect don't matter in
-practice, with some inputs <= 16 bytes.
+(1) CityHash64: none
 
-(2) CityHash64WithSeed: one or two minor issues with inputs containing at most
-two non-zero bytes and length <= 24 bytes.
+(2) CityHash64WithSeed: none
 
 (3) CityHash64WithSeeds: did not test
 
@@ -159,12 +177,13 @@ two non-zero bytes and length <= 24 bytes.
 
 (8) CityHashCrc256: none
 
-For now we are treating the flaws in our 64-bit functions as harmless, as we
-expect the primary use of these functions will be in hash tables.  A
-"perfect" hash function is overkill there.  Other opinions are welcome,
-especially if you have real-world examples of these flaws causing trouble!
+(9) CityHash32: none
 
-We hold our 128-bit and 256-bit hash functions to higher quality standards.
+Some minor flaws in 32-bit and 64-bit functions are harmless, as we
+expect the primary use of these functions will be in hash tables.  We
+may have gone slightly overboard in trying to please SMHasher and other
+similar tests, but we don't want anyone to choose a different hash function
+because of some minor issue reported by a quality test.
 
 
 For more information

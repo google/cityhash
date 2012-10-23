@@ -1,3 +1,11 @@
+CityHash v1.1, October 22, 2012
+
+  * Add CityHash32(), intended for 32-bit platforms.
+  * Change existing functions to improve their hash quality and/or speed.  Most
+    of the changes were minor, but CityHashCrc* was substantially reworked
+    (and made perhaps 10% slower, unfortunately).
+  * Improve README.
+
 CityHash v1.0.3, October 6, 2011
 
   * Change all the functions to improve their hash quality.  Most of the
