@@ -1,11 +1,11 @@
 m4_define([cityhash_major], [1])
 m4_define([cityhash_minor], [1])
-m4_define([cityhash_patchlevel], [0])
+m4_define([cityhash_patchlevel], [1])
 
 # Libtool shared library interface versions (current:revision:age)
 # Update this value for every release!  (A:B:C will map to foo.so.(A-C).C.B)
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-m4_define([cityhash_ltversion], [3:0:0])
+m4_define([cityhash_ltversion], [4:0:0])
 
 AC_PREREQ([2.65])
 AC_INIT([CityHash], [cityhash_major.cityhash_minor.cityhash_patchlevel], [cityhash-discuss@googlegroups.com])
@@ -45,9 +45,9 @@ AC_TYPE_UINT8_T
 
 # Check for __builtin_expect
 AC_MSG_CHECKING([if the compiler supports __builtin_expect])
-AC_TRY_COMPILE(, [
-    return __builtin_expect(1, 1) ? 1 : 0
-], [
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM(, [[return __builtin_expect(1, 1) ? 1 : 0;]])],
+  [
     cityhash_have_builtin_expect=yes
     AC_MSG_RESULT([yes])
 ], [
