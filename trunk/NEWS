@@ -1,3 +1,12 @@
+CityHash v1.1.1, June 17, 2013
+
+  * Fix CityHash32() so platforms that disagree about whether 'char' is signed
+    use the same mathematical function.  For most people this changes nothing
+    as most popular platforms agree with x86 about whether 'char' is signed.
+  * No changes to any of the functions, unless you had been using CityHash32()
+    despite "make check" reporting a failure on your platform.
+  * Slightly modernize and improve configuration and portability.
+
 CityHash v1.1, October 22, 2012
 
   * Add CityHash32(), intended for 32-bit platforms.
