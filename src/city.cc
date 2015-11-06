@@ -512,9 +512,16 @@ uint128 CityHash128(const char *s, size_t len) {
       CityHash128WithSeed(s, len, uint128(k0, k1));
 }
 
-#ifdef __SSE4_2__
+#if defined __SSE4_2__ || defined __ARM_FEATURE_CRC32
 #include <citycrc.h>
+#ifdef __SSE4_2__
 #include <nmmintrin.h>
+#define crc32_u64 _mm_crc32_u64
+#endif
+#ifdef __ARM_FEATURE_CRC32
+#include <arm_acle.h>
+#define crc32_u64 __crc32cd
+#endif
 
 // Requires len >= 240.
 static void CityHashCrc256Long(const char *s, size_t len,
@@ -550,9 +557,9 @@ static void CityHashCrc256Long(const char *s, size_t len,
     g += e;                                     \
     e += z;                                     \
     g += x;                                     \
-    z = _mm_crc32_u64(z, b + g);                \
-    y = _mm_crc32_u64(y, e + h);                \
-    x = _mm_crc32_u64(x, f + a);                \
+    z = crc32_u64(z, b + g);                    \
+    y = crc32_u64(y, e + h);                    \
+    x = crc32_u64(x, f + a);                    \
     e = Rotate(e, r);                           \
     c += e;                                     \
     s += 40
