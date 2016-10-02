@@ -132,14 +132,14 @@ citycrc.h; the rest are declared in city.h.
 
 ## Limitations
 
-1. CityHash32 is intended for little-endian 32-bit code, and everything else in
+* CityHash32 is intended for little-endian 32-bit code, and everything else in
 the current version of CityHash is intended for little-endian 64-bit CPUs.
 
 All functions that don't use the CRC32 instruction should work in
 little-endian 32-bit or 64-bit code.  CityHash should work on big-endian CPUs
 as well, but we haven't tested that very thoroughly yet.
 
-2. CityHash is fairly complex.  As a result of its complexity, it may not
+* CityHash is fairly complex.  As a result of its complexity, it may not
 perform as expected on some compilers.  For example, preliminary reports
 suggest that some Microsoft compilers compile CityHash to assembly that's
 10-20% slower than it could be.
