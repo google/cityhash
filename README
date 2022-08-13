@@ -99,10 +99,16 @@ On systems with gcc, we generally recommend:
 make all check CXXFLAGS="-g -O3"
 sudo make install
 
-Or, if your system has the CRC32 instruction, and you want to build everything:
+If your system has the SSE CRC32 instruction, and you want to build everything:
 
 ./configure --enable-sse4.2
 make all check CXXFLAGS="-g -O3 -msse4.2"
+sudo make install
+
+Or, for the ARMv8 CRC32C instruction:
+
+./configure --enable-sse4.2
+make all check CXXFLAGS="-g -O3 -march=armv8-a+crc"
 sudo make install
 
 Note that our build system doesn't try to determine the appropriate compiler

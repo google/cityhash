@@ -22,7 +22,7 @@
 #include <iostream>
 #include <string.h>
 #include "city.h"
-#ifdef __SSE4_2__
+#if defined __SSE4_2__ || defined __ARM_FEATURE_CRC32
 #include "citycrc.h"
 #endif
 
@@ -1279,7 +1279,7 @@ void Test(const uint64* expected, int offset, int len) {
   Check(expected[4], Uint128High64(u));
   Check(expected[5], Uint128Low64(v));
   Check(expected[6], Uint128High64(v));
-#ifdef __SSE4_2__
+#if defined __SSE4_2__ || defined __ARM_FEATURE_CRC32
   const uint128 y = CityHashCrc128(data + offset, len);
   const uint128 z = CityHashCrc128WithSeed(data + offset, len, kSeed128);
   uint64 crc256_results[4];
