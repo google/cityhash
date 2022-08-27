@@ -1,4 +1,4 @@
-
+#!/bin/bash
 # libtool (GNU libtool) 2.4
 # Written by Gordon Matzigkeit <gord@gnu.ai.mit.edu>, 1996
 
@@ -5101,7 +5101,7 @@ func_mode_link ()
       ;;
     esac
     libtool_args=$nonopt
-    base_compile="$nonopt $@"
+    base_compile="$nonopt $*"
     compile_command=$nonopt
     finalize_command=$nonopt
 
